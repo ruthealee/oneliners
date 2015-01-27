@@ -17,26 +17,32 @@ fi
 
 ## Beginning our checks with the user
 
-if [[ -n "$( getent passwd $1)" ]]; then
+getent passwd $1 > /dev/null
 
+if [[ $? -eq 0 ]]; then
         echo -e "$g[USER EXISTS]$w";
 
-### now we are tsting for the group:
-        if [[ -n "$( grep ^$2: /etc/group)" ]]; then
+### now we are testing for the group:
+	getent group $2 > /dev/null
+        if [[ $? -eq 0 ]]; then
 
 ## if the group also exists we will add the user:               
                 echo -e "$g[GROUP EXISTS]$w";
                 usermod -aG $2 $1;
-                echo -e "$g[ADDED TO GROUP] \\n${w}Group Memberships: \\n$( grep $1 /etc/group | awk -F ':' '{print $1}' | grep -v $1);"
-
+		if [[ $? -eq 0 ]]; then
+                	echo -e "$g[ADDED TO GROUP] \\n${w}Group Memberships: \\n$( grep $1 /etc/group | awk -F ':' '{print $1}' | grep -v $1);"
+		else
+			echo "$rAdding user to group failed$w"
+			exit 1
+		fi
 ## if the group does not exist we will report that and exit
         else
                 echo -e "$r[GROUP DOES NOT EXIST]$w";
-                exit
+                exit1
         fi;
 else
 ## The user does not exist    
         echo -e "$r[USER DOES NOT EXIST]$w";
-        exit
-fi;
+        exit 1
+fi; 
 ~         
